@@ -1,0 +1,226 @@
+﻿///$tab Main
+$(must_include='..\..\config\config.qvs');
+
+CALL vPathArchive;
+
+CNAE:
+LOAD * FROM [$(vPathDataTransformed)CNAE.qvd] (qvd);
+
+dim_setores:
+LOAD * FROM [$(vPathDataTransformed)setores.qvd] (qvd);
+
+aux_CNAE:
+LOAD
+	AutoNumberHash256(
+		cd_ramo_atividade&
+		de_ramo_atividade,
+		'pk_ramo_atividade'
+		) as pk_ramo_atividade,
+	AutoNumberHash256(
+		nu_ordem,
+		'pk_ordem'
+		) as pk_ordem,
+		CNAE_2digitos,
+		cd_ramo_atividade,
+		de_ramo_atividade,
+		cd_cnpj,
+		nu_ordem
+Resident CNAE;
+DROP Table CNAE;
+
+dim_ramo_atividade:
+LOAD Distinct
+		cd_ramo_atividade,
+		de_ramo_atividade,
+		pk_ramo_atividade
+Resident aux_CNAE
+Where IsNull(pk_ramo_atividade) = False();
+
+dim_ordem:
+LOAD Distinct
+		nu_ordem,
+		pk_ordem
+Resident aux_CNAE
+Where IsNull(pk_ordem) = False();
+
+fato_CNAE:
+LOAD Distinct
+	pk_ramo_atividade,
+	pk_ordem,
+	CNAE_2digitos,
+	cd_cnpj
+Resident aux_CNAE;
+
+drop table aux_CNAE;
+
+
+
+join_empresas:
+LOAD 
+	cd_cnpj,
+	fl_matriz,
+	dt_abertura,
+	nm_razao_social,
+	cd_natureza_juridica,
+	de_natureza_juridica,
+	nm_logradouro,
+	nu_logradouro,
+	cd_cep,
+	nm_bairro,
+	nm_municipio,
+	sg_uf,
+	de_situacao,
+	de_classif_natureza_juridica
+FROM [$(vPathDataTransformed)empresas.qvd] (qvd);
+Join
+LOAD 
+	cd_cnpj,
+	vl_latitude,
+	vl_longitude,
+	vl_total_veiculos_antt,
+	vl_total_veiculos_leves,
+	vl_total_veiculos_pesados,
+	fl_optante_simples,
+	qt_filial,
+	fl_optante_simei,
+	fl_optante_simples_simei,
+	de_saude_tributaria,
+	de_nivel_atividade,
+	vl_total_veiculos,
+	faixas_veiculos
+FROM [$(vPathDataTransformed)empresasCalc.qvd] (qvd);
+
+
+aux_empresas:
+LOAD
+	AutoNumberHash256(
+		nm_logradouro&
+		nu_logradouro&
+		cd_cep&
+		nm_bairro&
+		nm_municipio&
+		sg_uf&
+		vl_latitude&
+		vl_longitude,
+		'pk_localizacao'
+		) as pk_localizacao,
+	AutoNumberHash256(
+		vl_total_veiculos_antt&
+		vl_total_veiculos_leves&
+		vl_total_veiculos_pesados&
+		faixas_veiculos,
+		'pk_veiculos'
+		) as pk_veiculos,
+	AutoNumberHash256(
+		fl_optante_simples&
+		fl_optante_simei&
+		fl_optante_simples_simei,
+		'pk_optante'
+		) as pk_optante,
+	AutoNumberHash256(
+		dt_abertura,
+		'pk_data'
+		) as pk_data,
+	AutoNumberHash256(
+		cd_natureza_juridica&
+		de_natureza_juridica&
+		de_classif_natureza_juridica,
+		'pk_juridica'
+		) as pk_juridica,
+	AutoNumberHash256(
+		fl_matriz&
+		de_situacao&
+		de_saude_tributaria&
+		de_nivel_atividade,
+		'pk_caract_empresas'
+		) as pk_caract_empresas,
+		*
+Resident join_empresas;
+DROP Table join_empresas;
+
+dim_localizacao:
+LOAD Distinct
+		nm_logradouro,
+		nu_logradouro,
+		cd_cep,
+		nm_bairro,
+		nm_municipio,
+		sg_uf,
+		vl_latitude,
+		vl_longitude,
+		pk_localizacao
+Resident aux_empresas
+Where IsNull(pk_localizacao) = False();
+
+dim_veiculos:
+LOAD Distinct
+		vl_total_veiculos_antt,
+		vl_total_veiculos_leves,
+		vl_total_veiculos_pesados,
+		faixas_veiculos,
+		pk_veiculos
+Resident aux_empresas
+Where IsNull(pk_veiculos) = False();
+
+dim_optante:
+LOAD Distinct
+		fl_optante_simples,
+		fl_optante_simei,
+		fl_optante_simples_simei,
+		pk_optante
+Resident aux_empresas
+Where IsNull(pk_optante) = False();
+
+dim_data:
+LOAD Distinct
+		dt_abertura,
+		pk_data
+Resident aux_empresas
+Where IsNull(pk_data) = False();
+
+dim_juridica:
+LOAD Distinct
+		cd_natureza_juridica,
+		de_natureza_juridica,
+		de_classif_natureza_juridica,
+		pk_juridica
+Resident aux_empresas
+Where IsNull(pk_juridica) = False();
+
+dim_caract_empresas:
+LOAD Distinct
+		fl_matriz,
+		de_situacao,
+		de_saude_tributaria,
+		de_nivel_atividade,
+		pk_caract_empresas
+Resident aux_empresas
+Where IsNull(pk_caract_empresas) = False();
+
+fato_empresas:
+LOAD Distinct
+	pk_localizacao,
+	pk_veiculos,
+	pk_optante,
+	pk_data,
+	pk_juridica,
+	pk_caract_empresas,
+	cd_cnpj,
+	nm_razao_social,
+	sum(qt_filial) as qt_filial,
+	sum(vl_total_veiculos) as vl_total_veiculos
+Resident aux_empresas
+Group By
+	pk_localizacao,
+	pk_veiculos,
+	pk_optante,
+	pk_data,
+	pk_juridica,
+	pk_caract_empresas,
+	cd_cnpj,
+	nm_razao_social;
+
+drop table aux_empresas;
+
+//call vStoreFile(vPathStorePbi,'','csv','txt');
+	

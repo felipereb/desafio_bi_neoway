@@ -1,0 +1,61 @@
+﻿///$tab Main
+$(must_include='..\..\config\config.qvs');
+
+CALL vPathArchive;
+
+
+//Extrato de dataMirrors CNAE.qvd
+CNAEv1:
+
+LOAD cd_cnpj, 
+     nu_ordem,
+     cd_ramo_atividade, 
+     de_ramo_atividade
+FROM
+[$(vPathDataMirrors)CNAE.qvd] (qvd);
+
+//segmentacao dos campos multivalorados.
+CNAEv2:
+load cd_cnpj Resident CNAEv1;
+
+for i=1 to 5
+
+Inner join (CNAEv2)
+
+load cd_cnpj, 
+SubField(nu_ordem, '~@~', $(i)) as nu_ordem$(i),
+SubField(cd_ramo_atividade,'~@~',$(i)) as cd_ramo_atividade$(i),
+SubField(de_ramo_atividade,'~@~',$(i)) as de_ramo_atividade$(i)
+Resident CNAEv1;
+
+NEXT i;
+
+drop table CNAEv1;
+
+
+for i=1 to 5
+
+//concatenate para uma coluna, como um crosstable.
+CNAE:
+
+load cd_cnpj,
+nu_ordem$(i) as nu_ordem,
+cd_ramo_atividade$(i) as cd_ramo_atividade,
+de_ramo_atividade$(i) as de_ramo_atividade
+Resident CNAEv2
+where isnull(nu_ordem$(i))=false();
+
+NEXT i;
+
+//nova coluna com 2 digitos do codigo do ramo de atividade.
+left join
+
+load cd_cnpj,
+nu_ordem,
+left(cd_ramo_atividade,2) as CNAE_2digitos
+Resident CNAE;
+
+drop table CNAEv2;
+
+
+call vStoreFile(vPathDataTransformed,'',);

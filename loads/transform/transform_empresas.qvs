@@ -1,0 +1,26 @@
+﻿///$tab Main
+$(must_include='..\..\config\config.qvs');
+
+CALL vPathArchive;
+
+//Extrato de datamMirrors empresas.qvd
+empresas:
+
+LOAD cd_cnpj,
+	 fl_matriz,
+	 Date(Date#(trim(dt_abertura),'MM/DD/YYYY'),'DD/MM/YYYY') as dt_abertura,
+     nm_razao_social,
+     cd_natureza_juridica,
+     de_natureza_juridica,
+     nm_logradouro,
+     nu_logradouro,
+     cd_cep,
+     nm_bairro,
+     nm_municipio,
+     sg_uf,
+     de_situacao,
+     de_classif_natureza_juridica
+FROM
+[$(vPathDataMirrors)empresas.qvd] (qvd);
+
+call vStoreFile(vPathDataTransformed,'',);

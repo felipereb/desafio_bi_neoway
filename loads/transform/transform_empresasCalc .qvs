@@ -1,0 +1,46 @@
+﻿///$tab Main
+$(must_include='..\..\config\config.qvs');
+
+CALL vPathArchive;
+
+//Extrato de dataMirrors arquivo empresasCalc.qvd
+empresasCalc_v1:
+
+LOAD cd_cnpj, 
+     vl_latitude, 
+     vl_longitude, 
+     num(vl_total_veiculos_antt) as vl_total_veiculos_antt, 
+     vl_total_veiculos_leves, 
+     vl_total_veiculos_pesados,
+     if(fl_optante_simples=0, 'não', 'sim') as fl_optante_simples, 
+     qt_filial,
+     if(fl_optante_simei=0, 'não', 'sim') as fl_optante_simei,
+     if(fl_optante_simples=1 and fl_optante_simei=1,1,0) as fl_optante_simples_simei,
+     de_saude_tributaria, 
+     de_nivel_atividade
+FROM
+[$(vPathDataMirrors)empresasCalc.qvd] (qvd);
+
+//soma veiculos leves e pesados
+veiculos_empresasCalc:
+load*,
+num(vl_total_veiculos_leves)+num(vl_total_veiculos_pesados) as vl_total_veiculos
+Resident empresasCalc_v1;
+
+//criacao de faixas de vl de veiculos
+empresasCalc:
+load*,
+if(vl_total_veiculos <= 5, '0 a 5',
+if(vl_total_veiculos <= 10, '6 a 10',
+if(vl_total_veiculos <= 15, '11 a 15',
+if(vl_total_veiculos <= 30, '16 a 30',
+if(vl_total_veiculos <= 50, '31 a 50',
+if(vl_total_veiculos > 50, '>50',)))))) as faixas_veiculos
+Resident veiculos_empresasCalc;
+
+
+drop table empresasCalc_v1;
+drop table veiculos_empresasCalc;
+
+call vStoreFile(vPathDataTransformed,'',);
+

@@ -1,0 +1,24 @@
+﻿///$tab Main
+$(must_include='..\..\config\config.qvs');
+
+CALL vPathArchive;
+
+//2. Extrato do arquivo empresasCalc.csv
+empresasCalc:
+
+LOAD cd_cnpj, 
+     vl_latitude, 
+     vl_longitude, 
+     vl_total_veiculos_antt, 
+     vl_total_veiculos_leves, 
+     vl_total_veiculos_pesados,
+     fl_optante_simples, 
+     qt_filial, 
+     fl_optante_simei, 
+     de_saude_tributaria, 
+     de_nivel_atividade
+FROM
+[C:\Users\felip\Downloads\teste_bi-master\teste_bi-master\files\spreadsheets\empresasCalc.csv]
+(txt, utf8, embedded labels, delimiter is ';', msq);
+
+call vStoreFile(vPathDataMirrors,'',);

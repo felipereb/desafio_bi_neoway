@@ -1,0 +1,26 @@
+﻿///$tab Main
+$(must_include='..\..\config\config.qvs');
+
+CALL vPathArchive;
+
+//1. Extrato da Mysql DB do arquivo empresas.csv
+empresas:
+
+ODBC CONNECT TO desafio_neoway;
+SQL SELECT `ï»¿cd_cnpj` as cd_cnpj,
+    `fl_matriz`,
+    `dt_abertura`,
+    `nm_razao_social`,
+    `cd_natureza_juridica`,
+    `de_natureza_juridica`,
+    `nm_logradouro`,
+    `nu_logradouro`,
+    `cd_cep`,
+    `nm_bairro`,
+    `nm_municipio`,
+    `sg_uf`,
+    `de_situacao`,
+    `de_classif_natureza_juridica`
+FROM `desafio_neoway`.empresas;
+
+call vStoreFile(vPathDataMirrors,'',);

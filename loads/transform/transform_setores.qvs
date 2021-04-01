@@ -1,0 +1,15 @@
+﻿///$tab Main
+$(must_include='..\..\config\config.qvs');
+
+CALL vPathArchive;
+
+//Extrato de dataMirrors setores.qvd
+setores:
+
+LOAD CNAE_2digitos,
+     divisoes,
+     ramo_de_atividade
+FROM
+[$(vPathDataMirrors)setores.qvd] (qvd);
+
+call vStoreFile(vPathDataTransformed,'',);

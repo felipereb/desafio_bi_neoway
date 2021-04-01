@@ -1,0 +1,17 @@
+﻿///$tab Main
+$(must_include='..\..\config\config.qvs');
+
+CALL vPathArchive;
+
+//3. Extrato direto do arquivo CNAE.csv
+CNAE:
+
+LOAD cd_cnpj, 
+     nu_ordem,
+     cd_ramo_atividade, 
+     de_ramo_atividade
+FROM
+[C:\Users\felip\Downloads\teste_bi-master\teste_bi-master\files\spreadsheets\CNAE.csv]
+(txt, utf8, embedded labels, delimiter is ';', msq);
+
+call vStoreFile(vPathDataMirrors,'',);

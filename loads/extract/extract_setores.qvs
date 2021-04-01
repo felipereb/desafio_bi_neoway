@@ -1,0 +1,15 @@
+﻿///$tab Main
+$(must_include='..\..\config\config.qvs');
+
+CALL vPathArchive;
+
+//Extrato da --database neoway --collection setores, do MongoDB
+setores:
+
+ODBC CONNECT TO MondoDB;
+SQL SELECT `(DIVISÃO - 2digitos CNAE)` as CNAE_2digitos,
+    `Divisões` as divisoes,
+    `Ramo de Atividade` as ramo_de_atividade
+FROM neoway.setores;
+
+call vStoreFile(vPathDataMirrors,'',);
